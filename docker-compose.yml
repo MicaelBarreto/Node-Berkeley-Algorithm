@@ -1,0 +1,89 @@
+version: '3.7'
+
+services:
+    daemon:
+        build:
+            context: .
+            dockerfile: .docker/node/server/Dockerfile
+        image: daemmon
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        volumes:
+            - ./date-server:/usr/src/app
+        networks:
+            - date-network
+        environment: 
+            - TZ=America/Sao_Paulo
+
+    client1:
+        build:
+            context: .
+            dockerfile: .docker/node/client/Dockerfile
+        image: client1
+        restart: unless-stopped
+        ports:
+            - "3001:3001"
+        volumes:
+            - ./date-client:/usr/src/app
+        networks:
+            - date-network
+        environment: 
+            - ADJUSTED_DATE=25
+            - PORT=3001
+            - TZ=America/Sao_Paulo
+
+    client2:
+        build:
+            context: .
+            dockerfile: .docker/node/client/Dockerfile
+        image: client2
+        restart: unless-stopped
+        ports:
+            - "3002:3002"
+        volumes:
+            - ./date-client:/usr/src/app
+        networks:
+            - date-network
+        environment: 
+            - ADJUSTED_DATE=-30
+            - PORT=3002
+            - TZ=America/Sao_Paulo
+
+    client3:
+        build:
+            context: .
+            dockerfile: .docker/node/client/Dockerfile
+        image: client3
+        restart: unless-stopped
+        ports:
+            - "3003:3003"
+        volumes:
+            - ./date-client:/usr/src/app
+        networks:
+            - date-network
+        environment: 
+            - ADJUSTED_DATE=40
+            - PORT=3003
+            - TZ=America/Sao_Paulo
+
+    client4:
+        build:
+            context: .
+            dockerfile: .docker/node/client/Dockerfile
+        image: client3
+        restart: unless-stopped
+        ports:
+            - "3004:3004"
+        volumes:
+            - ./date-client:/usr/src/app
+        networks:
+            - date-network
+        environment: 
+            - ADJUSTED_DATE=50
+            - PORT=3004
+            - TZ=America/Sao_Paulo
+
+networks:
+    date-network:
+        driver: bridge

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="daemon-timer" id="daemonTimer">
+        <h3>Daemon</h3>
+        <h4 id="timer-daemon-h4"></h4>
+        <span id="timer-daemon-span"></span>
+    </div>
+    <div class="timers">
+        <div class="timer">
+            <h3>Client 1</h3>
+            <h4 id="timer1-h4"></h4>
+            <span id="timer1-span"></span>
+        </div>
+        <div class="separator"></div>
+        <div class="timer">
+            <h3>Client 2</h3>
+            <h4 id="timer2-h4"></h4>
+            <span id="timer2-span"></span>
+        </div>
+        <div class="separator"></div>
+        <div class="timer">
+            <h3>Client 3</h3>
+            <h4 id="timer3-h4"></h4>
+            <span id="timer3-span"></span>
+        </div>
+        <div class="separator"></div>
+        <div class="timer">
+            <h3>Client 4</h3>
+            <h4 id="timer4-h4"></h4>
+            <span id="timer4-span"></span>
+        </div>
+        <button class="btn" onclick="applyAlgorithm()">Apply Berkeley Algorithm</button>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js" integrity="sha512-rmZcZsyhe0/MAjquhTgiUcb4d9knaFc7b5xAfju483gbEXTkeJRUMIPk6s3ySZMYUHEcjKbjLjyddGWMrNEvZg==" crossorigin="anonymous"></script>
+    <script>
+        var client1 = io("http://localhost:3001/");
+        var client2 = io("http://localhost:3002/");
+        var client3 = io("http://localhost:3003/");
+        var client4 = io("http://localhost:3004/");
+
+        var clients = {
+            client1: '',
+            client2: '',
+            client3: '',
+            client4: '',
+        };
+        
+        client1.on('connect', () => {
+            client1.emit('get_date');
+            client1.on('get_date', data => {
+                clients.client1 = moment(data);
+                changeDate();
+            });
+
+            client1.on('update_date', () => {
+                client1.emit('get_date');
+            });
+        });
+
+        client2.on('connect', () => {
+            client2.emit('get_date');
+            client2.on('get_date', data => {
+                clients.client2 = moment(data);
+                changeDate();
+            });
+
+            client2.on('update_date', () => {
+                client2.emit('get_date');
+            });
+        });
+
+        client3.on('connect', () => {
+            client3.emit('get_date');
+            client3.on('get_date', data => {
+                clients.client3 = moment(data);
+                changeDate();
+            });
+
+            client3.on('update_date', () => {
+                client3.emit('get_date');
+            });
+        });
+
+        client4.on('connect', () => {
+            client4.emit('get_date');
+            client4.on('get_date', data => {
+                clients.client4 = moment(data);
+                changeDate();
+            });
+
+            client4.on('update_date', () => {
+                client4.emit('get_date');
+            });
+        });
+
+        setInterval(() => {
+            client1.emit('get_date');
+            client2.emit('get_date');
+            client3.emit('get_date');
+            client4.emit('get_date');
+        }, 30000);
+    </script>
+    <script>
+        var serverTime;
+        var diff = 0;
+        const changeDate = () => {
+            var now = moment();
+            serverTime = moment(now.valueOf() + diff*60000);
+            // Daemon style
+            time = moment(serverTime);
+            document.getElementById('timer-daemon-h4').textContent = time.format('LT');
+            document.getElementById('timer-daemon-span').textContent = time.format('L');
+
+            // Timer1 style
+            time = moment(clients.client1);
+            document.getElementById('timer1-h4').textContent = time.format('LT');
+            document.getElementById('timer1-span').textContent = time.format('L');
+
+            // Timer2 style
+            time = moment(clients.client2);
+            document.getElementById('timer2-h4').textContent = time.format('LT');
+            document.getElementById('timer2-span').textContent = time.format('L');
+
+            // Timer3 style
+            time = moment(clients.client3);
+            document.getElementById('timer3-h4').textContent = time.format('LT');
+            document.getElementById('timer3-span').textContent = time.format('L');
+
+            // Timer4 style
+            time = moment(clients.client4);
+            document.getElementById('timer4-h4').textContent = time.format('LT');
+            document.getElementById('timer4-span').textContent = time.format('L');
+        };
+    </script>
+    <script>
+        const applyAlgorithm = () => {
+            var average = (moment(clients.client1).valueOf() + moment(clients.client2).valueOf() + moment(clients.client3).valueOf() + moment(clients.client4).valueOf())/4;
+            serverTime = moment(average);
+            diff = -(moment().valueOf() - serverTime.valueOf())/60000;
+
+            client1.emit('update_date', diff);
+            client2.emit('update_date', diff);
+            client3.emit('update_date', diff);
+            client4.emit('update_date', diff);
+        };
+    </script>
+    <style>
+        .daemon-timer {
+            width: 100%;
+            text-align: center;
+        }
+
+        .timers {
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            top: 30%;
+            width: 100%;
+            height: 50%;
+        }
+
+        .timer {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 20%;
+            display: flex;
+            text-align: center;
+        }
+
+        h3 {
+            color: black;
+            font-size: 30px;
+        }
+
+        h4 {
+            color: rgb(77, 77, 77);
+            font-size: 25px;
+        }
+
+        span {
+            color: rgb(116, 116, 116);
+            font-size: 20px;
+        }
+
+        .separator {
+            border: rgb(163, 163, 163) 1px solid;
+        }
+
+        .btn {
+            position: fixed;
+            bottom: 5%;
+            width: 50%;
+            font-size: 30px;
+            color: #fff;
+            background-color: #337ab7;
+            border-color: #2e6da4;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</body>
+</html>
